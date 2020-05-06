@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
 
@@ -16,28 +17,61 @@ module.exports = {
   },
 
   resolve: {
-      // Add '.ts' and '.tsx' as resolvable extensions.
-      extensions: [".ts", ".tsx", ".js"]
+    // Add '.ts' and '.tsx' as resolvable extensions.
+    extensions: [".ts", ".tsx", ".js", ".scss"]
   },
 
   module: {
-      rules: [
+    rules: [
+      {
+        test: /\.ts(x?)$/,
+        exclude: /node_modules/,
+        use: [
           {
-              test: /\.ts(x?)$/,
-              exclude: /node_modules/,
-              use: [
-                  {
-                      loader: "ts-loader"
-                  }
-              ]
-          },
-          // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
-          {
-              enforce: "pre",
-              test: /\.js$/,
-              loader: "source-map-loader"
+            loader: "ts-loader"
           }
-      ]
+        ]
+      },
+      // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+      {
+        enforce: "pre",
+        test: /\.js$/,
+        loader: "source-map-loader"
+      },
+      {
+        test: /\.module\.s(a|c)ss$/,
+        loader: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true,
+              sourceMap: true
+            }
+          },
+          {
+            loader: 'sass-loader',
+            options: {
+              sourceMap: true
+            }
+          }
+        ]
+      },
+      {
+        test: /\.s(a|c)ss$/,
+        exclude: /\.module.(s(a|c)ss)$/,
+        loader: [
+          'style-loader',
+          'css-loader',
+          {
+            loader: 'sass-loader',
+            options: {
+              sourceMap: true
+            }
+          }
+        ]
+      }
+    ]
   },
 
   plugins: [
@@ -46,19 +80,14 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './index.html'
     }),
+    new MiniCssExtractPlugin({
+      filename: '[name].css',
+      chunkFilename: '[id].css'
+    })
   ],
 
   output: {
     path: path.join(__dirname, '/dist'),
     filename: 'bundle.min.js'
   },
-
-  // When importing a module whose path matches one of the following, just
-  // assume a corresponding global variable exists and use that instead.
-  // This is important because it allows us to avoid bundling all of our
-  // dependencies, which allows browsers to cache those libraries between builds.
-  // externals: {
-  //     "react": "React",
-  //     "react-dom": "ReactDOM"
-  // }
 };
